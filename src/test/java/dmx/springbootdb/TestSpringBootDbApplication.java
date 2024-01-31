@@ -56,9 +56,7 @@ public class TestSpringBootDbApplication {
         user.setName("admin");
         user.setEmail("admin@mail.com");
         userRepository.save(user);
-        System.out.println(userRepository.findByName("admin"));
         assertThat(userRepository.findByName("admin")).isNotNull();
-        System.out.println(userRepository.findByName("not_found"));
         assertThat(userRepository.findByName("not_found")).isNull();
     }
 }
