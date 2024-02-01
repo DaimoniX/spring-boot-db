@@ -1,6 +1,7 @@
 package dmx.springbootdb;
 
 import dmx.springbootdb.data.*;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @AutoConfigureTestDatabase
@@ -29,6 +31,14 @@ public class AppDataJpaTest {
         employeeRepository.saveAndFlush(user);
         assertThat(employeeRepository.findByName("admin")).isNotNull();
         assertThat(employeeRepository.findByName("not_found")).isNull();
+    }
+
+    @Test
+    public void repoTestError() {
+        final var user = new EmployeeEntity();
+        user.setName("");
+        user.setEmail("error");
+        assertThatThrownBy(() -> employeeRepository.saveAndFlush(user)).isInstanceOf(ConstraintViolationException.class);
     }
 
     @Test

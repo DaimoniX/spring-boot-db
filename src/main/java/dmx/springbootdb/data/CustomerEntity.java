@@ -1,8 +1,6 @@
 package dmx.springbootdb.data;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -14,7 +12,6 @@ import org.hibernate.validator.constraints.UniqueElements;
 @Entity
 @Table(name = "customers")
 @EqualsAndHashCode(callSuper = true)
-@Inheritance(strategy = InheritanceType.JOINED)
 public class CustomerEntity extends UserEntity {
     @Min(0)
     private int score;

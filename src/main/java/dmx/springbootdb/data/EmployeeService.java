@@ -15,7 +15,7 @@ public class EmployeeService {
 
     @PostConstruct
     private void init() {
-        var admin = new EmployeeEntity();
+        final var admin = new EmployeeEntity();
         admin.setName("admin");
         admin.setEmail("admin@mail.com");
         admin.setSalary(1000);

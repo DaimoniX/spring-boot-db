@@ -11,6 +11,7 @@ import java.util.List;
 @Entity
 @Table(name = "products")
 @Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "product_type", discriminatorType = DiscriminatorType.INTEGER)
 public abstract class ProductEntity {
     @Id
     @GeneratedValue
@@ -21,7 +22,7 @@ public abstract class ProductEntity {
     private String name;
     @Column(nullable = false)
     private String description;
-    @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
+    @OneToMany(fetch = FetchType.EAGER, cascade = {CascadeType.ALL})
     @OrderBy("postedDate ASC")
     private List<CommentEntity> comments;
     @Min(0)

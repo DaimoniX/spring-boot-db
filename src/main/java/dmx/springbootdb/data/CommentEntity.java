@@ -9,6 +9,7 @@ import java.util.Date;
 @Data
 @Entity
 @Table(name = "comments")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public class CommentEntity {
     @Id
     @GeneratedValue
