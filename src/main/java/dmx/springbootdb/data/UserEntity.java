@@ -8,11 +8,12 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "users")
-public class UserEntity {
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+public abstract class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "user_id")
-    private Integer id;
+    private int id;
     @NotBlank
     @Column(name = "user_name")
     private String name;

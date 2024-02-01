@@ -1,7 +1,8 @@
 package dmx.springbootdb;
 
-import dmx.springbootdb.data.UserEntity;
-import dmx.springbootdb.data.UserRepository;
+import dmx.springbootdb.data.EmployeeEntity;
+import dmx.springbootdb.data.EmployeeRepository;
+import dmx.springbootdb.data.EmployeeService;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -11,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.jdbc.Sql;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
@@ -48,15 +50,30 @@ public class TestSpringBootDbApplication {
     }
 
     @Autowired
-    private UserRepository userRepository;
+    private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private EmployeeService employeeService;
 
     @Test
     public void repoTest() {
-        final var user = new UserEntity();
-        user.setName("admin");
-        user.setEmail("admin@mail.com");
-        userRepository.save(user);
-        assertThat(userRepository.findByName("admin")).isNotNull();
-        assertThat(userRepository.findByName("not_found")).isNull();
+        final var user = new EmployeeEntity();
+        user.setName("test");
+        user.setEmail("test@mail.com");
+        user.setSalary(10);
+        employeeRepository.save(user);
+        assertThat(employeeRepository.findByName("test")).isNotNull();
+        assertThat(employeeRepository.findByName("not_found")).isNull();
+    }
+
+    @Test
+    public void serviceTest() {
+        assertThat(employeeService.findByName("admin")).isNotNull();
+    }
+
+    @Test
+    @Sql(scripts = "classpath:test.sql")
+    public void sqlTest() {
+        assertThat(employeeRepository.findByName("sql-user")).isNotNull();
     }
 }

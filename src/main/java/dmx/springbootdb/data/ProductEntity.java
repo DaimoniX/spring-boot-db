@@ -4,25 +4,29 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.Cascade;
 
 import java.util.List;
 
 @Data
 @Entity
-@Table(name = "posts")
-public class PostEntity {
+@Table(name = "products")
+@Inheritance(strategy = InheritanceType.JOINED)
+public abstract class ProductEntity {
     @Id
     @GeneratedValue
+    @Column(name = "product_id")
     private int id;
     @Column(nullable = false)
     @NotBlank
-    @Min(4)
-    private String title;
+    private String name;
     @Column(nullable = false)
-    @NotBlank
-    @Min(64)
-    private String content;
+    private String description;
     @OneToMany(fetch = FetchType.EAGER)
-    @OrderBy("postedDate DESC")
+    @Cascade({ CascadeType.ALL })
+    @OrderBy("postedDate ASC")
     private List<CommentEntity> comments;
+    @Min(0)
+    private double price;
 }

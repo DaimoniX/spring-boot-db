@@ -1,14 +1,12 @@
 package dmx.springbootdb;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
-
-import javax.sql.DataSource;
 
 @Configuration
 @EnableAutoConfiguration
+@RequiredArgsConstructor
 public class AppConfig {
 
 }
