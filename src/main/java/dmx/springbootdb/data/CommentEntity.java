@@ -14,7 +14,7 @@ public class CommentEntity {
     @GeneratedValue
     @Column(name = "comment_id")
     private int id;
-    @OneToOne
+    @ManyToOne(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private UserEntity user;
     @NotBlank
     private String content;

@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.Cascade;
 
 import java.util.List;
 
@@ -23,10 +21,14 @@ public abstract class ProductEntity {
     private String name;
     @Column(nullable = false)
     private String description;
-    @OneToMany(fetch = FetchType.EAGER)
-    @Cascade({ CascadeType.ALL })
+    @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     @OrderBy("postedDate ASC")
     private List<CommentEntity> comments;
     @Min(0)
     private double price;
+
+    @OrderBy("id ASC")
+    public List<CommentEntity> getComments() {
+        return comments;
+    }
 }
