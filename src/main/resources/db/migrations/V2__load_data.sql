@@ -3,4 +3,4 @@ CREATE TABLE migrations_test_2 (
     name VARCHAR(255) NOT NULL
 );
 
-INSERT INTO migrations_test_2 (name) SELECT name FROM migrations_test WHERE val % 2 = 0;
+INSERT INTO migrations_test_2 (name) SELECT name FROM migrations_test_1 WHERE val % 2 = 0;
