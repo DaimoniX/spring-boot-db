@@ -27,6 +27,8 @@ public class EntityManagerTest {
         assertThat(e).isNotNull();
         assertThat(entity.getId()).isEqualTo(e.getId());
         assertThat(entity.getName()).isEqualTo(e.getName());
+        entity.setName("insertUpd");
+        assertThat(testManager.findById(entity.getId()).getName()).isEqualTo(entity.getName());
     }
 
     @Test
@@ -66,6 +68,17 @@ public class EntityManagerTest {
     }
 
     @Test
+    public void detachTest2() {
+        final var entity = new TestEntity();
+        entity.setName("Test");
+        testManager.insert(entity);
+        entity.setName("Test Insert");
+        assertThat(testManager.findById(entity.getId()).getName()).isEqualTo("Test Insert");
+        testManager.detach(entity);
+        assertThat(testManager.findById(entity.getId()).getName()).isNotEqualTo("Test Insert");
+    }
+
+    @Test
     public void mergeTest() {
         final var entity = new TestEntity();
         entity.setName("--------");
@@ -75,6 +88,21 @@ public class EntityManagerTest {
         testManager.merge(entity);
         testManager.completeTransaction();
         assertThat(testManager.findByName(entity.getName())).isNotNull();
+    }
+
+    @Test
+    public void mergeTest2() {
+        final var entity = new TestEntity();
+        entity.setName("--------");
+        testManager.startTransaction();
+        testManager.insertNonTransactional(entity);
+        testManager.flush();
+        assertThat(testManager.findByName("--------")).isNotNull();
+        testManager.detach(entity);
+        entity.setName("mergeTest2");
+        testManager.merge(entity);
+        testManager.completeTransaction();
+        assertThat(testManager.findByName("mergeTest2")).isNotNull();
     }
 
     @Test
