@@ -12,3 +12,5 @@ CREATE TABLE test_entity (
     PRIMARY KEY (id)
 );
 
+ALTER TABLE test_entity
+    ADD COLUMN `val` INT NULL AFTER `name`;
