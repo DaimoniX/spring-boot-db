@@ -1,24 +1,20 @@
 package dmx.springbootdb.emanager;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Table(name = "test_entity")
+@Table(name = "test_owner_entity")
 @Entity
 @NoArgsConstructor
-public class TestEntity {
+public class TestOwnerEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    @NotBlank
     private String name;
-    private int val;
 
-    public TestEntity(String name, int val) {
-        this.name = name;
-        this.val = val;
-    }
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "test_entity_id", referencedColumnName = "id")
+    private TestEntity testEntity;
 }

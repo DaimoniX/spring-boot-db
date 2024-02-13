@@ -1,10 +1,12 @@
 package dmx.springbootdb;
 
 import dmx.springbootdb.emanager.TestEntity;
+import dmx.springbootdb.emanager.TestOwnerEntity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import org.junit.jupiter.api.*;
 import org.junit.runner.RunWith;
@@ -93,5 +95,29 @@ public class CriteriaTest {
         final var selectAndQuery = entityQuery.select(root).where(predicates);
         final var result = entityManager.createQuery(selectAndQuery).getResultList();
         assertThat(result).asList().hasSize(2);
+    }
+
+    @Test
+    public void criteriaJoinTest() {
+        final var ownerCriteriaQuery = criteriaBuilder.createQuery(TestOwnerEntity.class);
+        final var root = ownerCriteriaQuery.from(TestOwnerEntity.class);
+        final Join<TestOwnerEntity, TestEntity> join = root.join("testEntity");
+
+        final var result = entityManager.createQuery(ownerCriteriaQuery.where(criteriaBuilder.equal(join.get("val"), 1))).getResultList();
+        assertThat(result).asList().hasSize(1);
+
+        final var owner = result.get(0);
+        assertThat(owner.getTestEntity().getName()).isEqualTo("test1");
+    }
+
+    @Test
+    public void criteriaJoinNotTest() {
+        final var ownerCriteriaQuery = criteriaBuilder.createQuery(TestOwnerEntity.class);
+        final var root = ownerCriteriaQuery.from(TestOwnerEntity.class);
+
+        final Join<TestOwnerEntity, TestEntity> join = root.join("testEntity");
+        final var result = entityManager.createQuery(ownerCriteriaQuery.where(criteriaBuilder.notEqual(join.get("val"), 1))).getResultList();
+
+        assertThat(result).asList().hasSize(0);
     }
 }
