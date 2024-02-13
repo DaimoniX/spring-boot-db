@@ -14,3 +14,5 @@ CREATE TABLE test_entity (
 
 ALTER TABLE test_entity
     ADD COLUMN `val` INT NULL AFTER `name`;
+
+INSERT INTO test_entity (name, val) VALUES ('test1', 1);

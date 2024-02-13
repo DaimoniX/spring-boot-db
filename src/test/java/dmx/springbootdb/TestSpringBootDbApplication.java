@@ -51,6 +51,12 @@ public class TestSpringBootDbApplication {
     private TestEntityRepository testEntityRepository;
 
     @Test
+    public void migrationTest() {
+        final var e = testEntityRepository.findByName("test1");
+        assertThat(e).isNotNull();
+    }
+
+    @Test
     public void testRepository() {
         final var entity = new TestEntity();
         entity.setName("testRepository");
