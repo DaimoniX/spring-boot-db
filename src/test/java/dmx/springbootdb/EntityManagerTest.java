@@ -1,7 +1,7 @@
 package dmx.springbootdb;
 
-import dmx.springbootdb.emanager.TestEntity;
-import dmx.springbootdb.emanager.TransactionTestManager;
+import dmx.springbootdb.dao.TestEntity;
+import dmx.springbootdb.dao.TransactionTestManager;
 import jakarta.persistence.NoResultException;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;

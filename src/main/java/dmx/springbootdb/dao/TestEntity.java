@@ -1,4 +1,4 @@
-package dmx.springbootdb.emanager;
+package dmx.springbootdb.dao;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

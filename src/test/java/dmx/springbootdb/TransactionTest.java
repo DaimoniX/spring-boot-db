@@ -1,7 +1,6 @@
 package dmx.springbootdb;
 
-import dmx.springbootdb.dao.TestEntity;
-import dmx.springbootdb.dao.TestEntityRepository;
+import dmx.springbootdb.tran.TransTestManager;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,7 +17,7 @@ import org.testcontainers.utility.DockerImageName;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class TestSpringBootDbApplication {
+public class TransactionTest {
     @Container
     @ServiceConnection
     private static final MySQLContainer<?> MY_SQL_CONTAINER = new MySQLContainer<>(DockerImageName.parse("mysql:8.3"));
@@ -48,21 +47,47 @@ public class TestSpringBootDbApplication {
     }
 
     @Autowired
-    private TestEntityRepository testEntityRepository;
+    private TransTestManager transTestManager;
 
     @Test
-    public void migrationTest() {
-        final var e = testEntityRepository.findByName("test1");
-        assertThat(e).isNotNull();
+    public void annotationTest() {
+        transTestManager.addEntityTransactional("ant1", false);
+        assertThat(transTestManager.getWithName("ant1")).isNotNull();
+
+        try {
+            transTestManager.addEntityTransactional("ant2", true);
+        } catch (Exception e) {
+            System.out.println("EXC");
+        }
+
+        assertThat(transTestManager.getWithName("ant2")).isNull();
     }
 
     @Test
-    public void testRepository() {
-        final var entity = new TestEntity();
-        entity.setName("testRepository");
-        testEntityRepository.save(entity);
-        final var e = testEntityRepository.findByName("testRepository");
-        assertThat(e).isNotNull();
-        assertThat(e.getName()).isEqualTo(entity.getName());
+    public void templateTest() {
+        transTestManager.addEntityTransactionTemplate("tmp1", false);
+        assertThat(transTestManager.getWithName("tmp1")).isNotNull();
+
+        try {
+            transTestManager.addEntityTransactionTemplate("tmp2", true);
+        } catch (Exception e) {
+            System.out.println("EXC");
+        }
+
+        assertThat(transTestManager.getWithName("tmp2")).isNull();
+    }
+
+    @Test
+    public void entityManagerTest() {
+        transTestManager.addEntityEntityManager("em1", false);
+        assertThat(transTestManager.getWithName("em1")).isNotNull();
+
+        try {
+            transTestManager.addEntityEntityManager("em2", true);
+        } catch (Exception e) {
+            System.out.println("EXC");
+        }
+
+        assertThat(transTestManager.getWithName("em2")).isNull();
     }
 }

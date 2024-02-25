@@ -1,7 +1,7 @@
 package dmx.springbootdb;
 
-import dmx.springbootdb.emanager.TestEntity;
-import dmx.springbootdb.emanager.TestOwnerEntity;
+import dmx.springbootdb.dao.TestEntity;
+import dmx.springbootdb.dao.TestOwnerEntity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.criteria.CriteriaBuilder;
