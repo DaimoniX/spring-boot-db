@@ -1,8 +1,7 @@
 package dmx.springbootdb;
 
-import dmx.springbootdb.dao.TestEntityService;
-import dmx.springbootdb.router.DatabaseContextHolder;
-import dmx.springbootdb.router.DatabaseEnum;
+import dmx.springbootdb.service.DBEnum;
+import dmx.springbootdb.service.TestEntityService;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,6 +25,8 @@ public class DataRoutingTest {
     @Container
     @ServiceConnection
     private static final MySQLContainer<?> MY_SQL_CONTAINER_B = new MySQLContainer<>(DockerImageName.parse("mysql:8.3"));
+    @Autowired
+    private TestEntityService testEntityService;
 
     @BeforeAll
     public static void beforeAll() {
@@ -60,27 +61,21 @@ public class DataRoutingTest {
         assertThat(MY_SQL_CONTAINER_B.isRunning()).isTrue();
     }
 
-    @Autowired
-    private DatabaseContextHolder databaseContextHolder;
-    @Autowired
-    private TestEntityService testEntityService;
-
     @Test
-    public void test() {
-        databaseContextHolder.setContext(DatabaseEnum.DATABASE_A);
-        assertThat(databaseContextHolder.getContext()).isEqualTo(DatabaseEnum.DATABASE_A);
-
+    public void routingTest() {
         final var e = testEntityService.create("A");
         assertThat(e).isNotNull();
-        assertThat(testEntityService.findByName("A")).isNotNull();
-
-        databaseContextHolder.setContext(DatabaseEnum.DATABASE_B);
-        assertThat(databaseContextHolder.getContext()).isEqualTo(DatabaseEnum.DATABASE_B);
+        assertThat(testEntityService.findByName("A")).isNull();
 
         final var eb = testEntityService.create("B");
         assertThat(eb).isNotNull();
-        assertThat(testEntityService.findByName("B")).isNotNull();
+        assertThat(testEntityService.findByName("B")).isNull();
 
-        assertThat(testEntityService.findByName("A")).isNull();
+        assertThat(testEntityService.findByNameWithDB("A", DBEnum.MASTER)).isNotNull();
+
+        testEntityService.replicate();
+
+        assertThat(testEntityService.findByName("A")).isNotNull();
+        assertThat(testEntityService.findByName("B")).isNotNull();
     }
 }
