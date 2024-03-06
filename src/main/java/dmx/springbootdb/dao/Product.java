@@ -6,10 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Table(name = "test_entity")
+@Table(name = "product")
 @Entity
 @NoArgsConstructor
-public class TestEntity {
+public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -17,7 +17,7 @@ public class TestEntity {
     private String name;
     private int val;
 
-    public TestEntity(String name, int val) {
+    public Product(String name, int val) {
         this.name = name;
         this.val = val;
     }

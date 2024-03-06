@@ -1,50 +1,50 @@
 package dmx.springbootdb.router;
 
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import lombok.Getter;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
-import org.springframework.stereotype.Component;
-
 import javax.sql.DataSource;
 import java.util.HashMap;
-import java.util.Map;
 
-@Component
+@Getter
 public class DatabaseRouter extends AbstractRoutingDataSource {
-    private final DatabaseAConfig dataSourceOneConfig;
-    private final DatabaseBConfig dataSourceTwoConfig;
-    private final DatabaseContextHolder dataSourceContextHolder;
+    private static final ThreadLocal<DatabaseEnum> CURRENT_DATASOURCE = new ThreadLocal<>();
+    private final DataSource masterDataSource;
+    private final DataSource slaveDataSource;
 
-    public DatabaseRouter(DatabaseContextHolder dataSourceContextHolder, DatabaseAConfig dataSourceOneConfig,
-                          DatabaseBConfig dataSourceTwoConfig) {
-        this.dataSourceOneConfig = dataSourceOneConfig;
-        this.dataSourceTwoConfig = dataSourceTwoConfig;
-        this.dataSourceContextHolder = dataSourceContextHolder;
+    public DatabaseRouter(DataSource masterDataSource, DataSource slaveDataSource) {
+        this.masterDataSource = masterDataSource;
+        this.slaveDataSource = slaveDataSource;
 
-        Map<Object, Object> dataSourceMap = new HashMap<>();
-        dataSourceMap.put(DatabaseEnum.DATABASE_A, databaseASource());
-        dataSourceMap.put(DatabaseEnum.DATABASE_B, databaseBSource());
-        this.setTargetDataSources(dataSourceMap);
-        this.setDefaultTargetDataSource(databaseASource());
+        final var dataSourceMap = new HashMap<>();
+        dataSourceMap.put(DatabaseEnum.MASTER, masterDataSource);
+        dataSourceMap.put(DatabaseEnum.SLAVE, slaveDataSource);
+
+        super.setTargetDataSources(dataSourceMap);
+        super.setDefaultTargetDataSource(masterDataSource);
+    }
+
+    public static boolean isReadonlyDataSource() {
+        return CURRENT_DATASOURCE.get() == DatabaseEnum.SLAVE;
+    }
+
+    public static void setReadonlyDataSource(boolean isReadonly) {
+        CURRENT_DATASOURCE.set(isReadonly ? DatabaseEnum.SLAVE : DatabaseEnum.MASTER);
+    }
+
+    public DatabaseEnum getContext() {
+        return CURRENT_DATASOURCE.get();
+    }
+
+    public void setContext(DatabaseEnum databaseEnum) {
+        CURRENT_DATASOURCE.set(databaseEnum);
     }
 
     @Override
     protected Object determineCurrentLookupKey() {
-        return dataSourceContextHolder.getContext();
+        return CURRENT_DATASOURCE.get();
     }
 
-    public DataSource databaseASource() {
-        var dataSource = new DriverManagerDataSource();
-        dataSource.setUrl(dataSourceOneConfig.getUrl());
-        dataSource.setUsername(dataSourceOneConfig.getUsername());
-        dataSource.setPassword(dataSourceOneConfig.getPassword());
-        return dataSource;
-    }
-
-    public DataSource databaseBSource() {
-        var dataSource = new DriverManagerDataSource();
-        dataSource.setUrl(dataSourceTwoConfig.getUrl());
-        dataSource.setUsername(dataSourceTwoConfig.getUsername());
-        dataSource.setPassword(dataSourceTwoConfig.getPassword());
-        return dataSource;
+    public enum DatabaseEnum {
+        MASTER, SLAVE
     }
 }

@@ -1,81 +1,87 @@
 package dmx.springbootdb;
 
-import dmx.springbootdb.service.DBEnum;
-import dmx.springbootdb.service.TestEntityService;
-import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import dmx.springbootdb.service.ProductService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DataRoutingTest {
     @Container
-    @ServiceConnection
-    private static final MySQLContainer<?> MY_SQL_CONTAINER_A = new MySQLContainer<>(DockerImageName.parse("mysql:8.3"));
-    @Container
-    @ServiceConnection
-    private static final MySQLContainer<?> MY_SQL_CONTAINER_B = new MySQLContainer<>(DockerImageName.parse("mysql:8.3"));
+    public static final DockerComposeContainer<?> CONTAINER;
+    private static final String JDBC_URL_TEMPLATE = "jdbc:mysql://%s:%d/tests";
+    private static Connection MASTER_CONNECTION;
+    private static Connection SLAVE_CONNECTION;
+
+    static {
+        CONTAINER = new DockerComposeContainer<>(new File("src/test/resources/docker-compose.yaml"))
+                .withExposedService("master", 3306)
+                .withExposedService("slave", 3306)
+                .withOptions("--compatibility").withLocalCompose(true);
+        CONTAINER.start();
+    }
+
     @Autowired
-    private TestEntityService testEntityService;
-
-    @BeforeAll
-    public static void beforeAll() {
-        MY_SQL_CONTAINER_A.start();
-        MY_SQL_CONTAINER_B.start();
-    }
-
-    @AfterAll
-    public static void afterAll() {
-        MY_SQL_CONTAINER_A.stop();
-        MY_SQL_CONTAINER_B.stop();
-    }
+    private ProductService productService;
 
     @DynamicPropertySource
-    public static void configureTestProperties(@NotNull DynamicPropertyRegistry registry) {
-        registry.add("db-a.datasource.url", MY_SQL_CONTAINER_A::getJdbcUrl);
-        registry.add("db-a.datasource.username", MY_SQL_CONTAINER_A::getUsername);
-        registry.add("db-a.datasource.password", MY_SQL_CONTAINER_A::getPassword);
-        registry.add("db-a.jpa.hibernate.ddl-auto", () -> "create");
+    public static void initProperties(DynamicPropertyRegistry registry) throws SQLException {
+        registry.add("master.datasource.jdbcUrl", () -> String.format(JDBC_URL_TEMPLATE, CONTAINER.getServiceHost("master", 3306), CONTAINER.getServicePort("master", 3306)));
+        registry.add("master.datasource.username", () -> "root");
+        registry.add("master.datasource.password", () -> "master");
 
-        registry.add("db-b.datasource.url", MY_SQL_CONTAINER_B::getJdbcUrl);
-        registry.add("db-b.datasource.username", MY_SQL_CONTAINER_B::getUsername);
-        registry.add("db-b.datasource.password", MY_SQL_CONTAINER_B::getPassword);
-        registry.add("db-b.jpa.hibernate.ddl-auto", () -> "create");
+        registry.add("slave.datasource.jdbcUrl", () -> String.format(JDBC_URL_TEMPLATE, CONTAINER.getServiceHost("slave", 3306), CONTAINER.getServicePort("slave", 3306)));
+        registry.add("slave.datasource.username", () -> "root");
+        registry.add("slave.datasource.password", () -> "slave");
+
+        MASTER_CONNECTION = DriverManager.getConnection(String.format(JDBC_URL_TEMPLATE, CONTAINER.getServiceHost("master", 3306), CONTAINER.getServicePort("master", 3306)), "root", "master");
+        SLAVE_CONNECTION = DriverManager.getConnection(String.format(JDBC_URL_TEMPLATE, CONTAINER.getServiceHost("slave", 3306), CONTAINER.getServicePort("slave", 3306)), "root", "slave");
     }
 
     @Test
-    public void containerStatusTest() {
-        assertThat(MY_SQL_CONTAINER_A.isCreated()).isTrue();
-        assertThat(MY_SQL_CONTAINER_B.isCreated()).isTrue();
-        assertThat(MY_SQL_CONTAINER_A.isRunning()).isTrue();
-        assertThat(MY_SQL_CONTAINER_B.isRunning()).isTrue();
+    public void contextLoads() {
+
+    }
+
+    private ResultSet getAllMaster() throws SQLException {
+        final var statement = MASTER_CONNECTION.createStatement();
+        return statement.executeQuery("SELECT * FROM tests.product");
+    }
+
+    private ResultSet getAllSlave() throws SQLException {
+        final var statement = SLAVE_CONNECTION.createStatement();
+        return statement.executeQuery("SELECT * FROM tests.product");
     }
 
     @Test
-    public void routingTest() {
-        final var e = testEntityService.create("A");
-        assertThat(e).isNotNull();
-        assertThat(testEntityService.findByName("A")).isNull();
+    public void testService() throws SQLException, InterruptedException {
+        var p = productService.create("test_0");
 
-        final var eb = testEntityService.create("B");
-        assertThat(eb).isNotNull();
-        assertThat(testEntityService.findByName("B")).isNull();
+        assertThat(p).isNotNull();
 
-        assertThat(testEntityService.findByNameWithDB("A", DBEnum.MASTER)).isNotNull();
+        final var master = getAllMaster();
 
-        testEntityService.replicate();
+        assertThat(master.next()).isTrue();
+        assertThat(master.getString("name")).isEqualTo("test_0");
 
-        assertThat(testEntityService.findByName("A")).isNotNull();
-        assertThat(testEntityService.findByName("B")).isNotNull();
+        assertThat(productService.findByName("test_0")).isNull();
+
+        Thread.sleep(5000);
+
+        assertThat(productService.findByName("test_0")).isNotNull();
     }
 }
