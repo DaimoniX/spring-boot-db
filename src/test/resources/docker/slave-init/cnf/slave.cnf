@@ -1,4 +1,0 @@
-[mariadb]
-log-bin
-server_id=2
-slave-skip-errors=1062
