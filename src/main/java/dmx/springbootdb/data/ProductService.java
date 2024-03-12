@@ -30,7 +30,15 @@ public class ProductService {
         return productRepository.findAll();
     }
 
-    public void deleteProduct(String id) {
-        productRepository.deleteById(id);
+    public List<Product> getProductsWithPriceLess(double price) {
+        return productRepository.findProductsByPriceLessThan(price);
+    }
+
+    public Product findProductByName(String name) {
+        return productRepository.findFirstByName(name);
+    }
+
+    public void deleteProductByName(String name) {
+        productRepository.deleteProductByName(name);
     }
 }

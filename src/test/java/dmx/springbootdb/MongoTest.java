@@ -42,16 +42,21 @@ public class MongoTest {
     private CustomerRepository customerRepository;
 
     @Test
-    public void serviceTest(){
+    public void serviceTest() {
         final var product = productService.createProduct("Test Product", 100.0);
         assertThat(productService.getProducts()).contains(product);
         assertThat(productService.updatePriceById(product.getId(), 55).getPrice()).isEqualTo(55);
-        productService.deleteProduct(product.getId());
-        assertThat(productService.getProducts()).doesNotContain(product);
+
+        assertThat(productService.getProductsWithPriceLess(60)).hasSize(1);
+
+        assertThat(productService.findProductByName("Test Product")).isNotNull();
+
+        productService.deleteProductByName("Test Product");
+        assertThat(productService.getProducts()).isEmpty();
     }
 
     @Test
-    public void dslTest(){
+    public void repository2Test() {
         final var customer = customerRepository.save(new Customer(20, 100, "John", "Doe"));
         assertThat(customerRepository.findAll()).contains(customer);
         assertThat(customerRepository.findByFirstName("John")).isEqualTo(customer);
